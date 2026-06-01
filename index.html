@@ -3,73 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>にゃんこ風タワーディフェンス - バグ修正版</title>
+    <title>にゃんこ風大戦 - 究極個別設定版</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #111; color: #fff; margin: 0; padding: 0; text-align: center; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-        
         #game-container { max-width: 800px; margin: 0 auto; background: #222; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.8); padding-bottom: 20px; }
-        
         .page { display: none; padding: 15px; }
         .page.active { display: block; }
-
         .global-hud { display: flex; justify-content: space-around; background: #000; padding: 10px; font-size: 16px; font-weight: bold; border-bottom: 2px solid #444; }
         .gold-color { color: #ffeb3b; }
-
-        /* ボタン共通 */
         .btn { background: #ff9800; border: none; color: white; padding: 14px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; margin: 5px; touch-action: manipulation; }
         .btn:hover { background: #e68a00; }
-        .btn:disabled { background: #555 !important; cursor: not-allowed; opacity: 0.4; }
+        .btn:disabled { background: #555 !important; opacity: 0.4; cursor: not-allowed; }
         .btn-back { background: #555; width: 90%; max-width: 300px; margin-top: 20px; }
-
-        /* ホーム画面 */
         #home-page h1 { font-size: 28px; margin-top: 40px; color: #ff9800; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; padding: 30px; max-width: 400px; margin: 0 auto; }
         .btn-menu { font-size: 20px; padding: 22px; }
-
-        /* 戦闘画面 */
-        canvas { background: linear-gradient(to bottom, #1a237e, #121212 70%, #2e7d32 70%, #1b5e20); border: 2px solid #444; border-radius: 6px; display: block; margin: 10px auto; max-width: 100%; }
+        canvas { background: linear-gradient(to bottom, #0d1b2a, #1b263b 70%, #3e493a 70%, #283618); border: 2px solid #444; border-radius: 6px; display: block; margin: 10px auto; max-width: 100%; }
         .battle-hud { display: flex; justify-content: space-between; background: #111; padding: 10px; font-size: 14px; border-radius: 4px; margin-bottom: 5px; font-weight: bold; }
         .deck-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; padding: 0 5px; }
-        
-        /* 出撃スロット（コスト不足時は完全にグレーアウト） */
-        .deck-slot { background: #333; border: 2px solid #555; padding: 12px 4px; border-radius: 6px; font-size: 12px; cursor: pointer; text-align: center; font-weight: bold; touch-action: manipulation; min-height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: background 0.1s; }
-        .deck-slot:active { background: #aaa !important; }
-        .deck-slot.disabled { background: #222 !important; border-color: #333 !important; color: #555 !important; opacity: 0.4; cursor: not-allowed; pointer-events: none; }
-        
-        /* 育成画面 */
+        .deck-slot { background: #333; border: 2px solid #555; padding: 12px 4px; border-radius: 6px; font-size: 12px; cursor: pointer; text-align: center; font-weight: bold; min-height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .deck-slot.disabled { background: #222 !important; border-color: #333 !important; color: #555 !important; opacity: 0.4; pointer-events: none; }
         .scroll-list { max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 10px; background: #111; border-radius: 6px; text-align: left; }
-        .char-card { background: #2a2a2a; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* ガチャ画面 */
+        .char-card { background: #2a2a2a; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .char-desc { font-size: 11px; color: #bbb; margin-top: 4px; line-height: 1.3; }
         .gacha-box { background: #333; border: 2px dashed #ffea00; padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 400px; position: relative; }
         #gacha-log { background: #000; padding: 10px; border-radius: 6px; height: 100px; overflow-y: auto; font-size: 13px; color: #ccffcc; text-align: left; margin-top: 15px; }
-        
-        /* ガチャ演出 */
-        #gacha-animation-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); border-radius: 10px; z-index: 10; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
-        .capsule { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(to bottom, #ff1744 50%, #fff 50%); border: 4px solid #000; position: relative; margin-bottom: 20px; }
-        
-        @keyframes shake {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(-8px, 5px) rotate(-10deg); }
-            40% { transform: translate(6px, -3px) rotate(10deg); }
-            60% { transform: translate(-5px, 2px) rotate(-5deg); }
-            80% { transform: translate(4px, 4px) rotate(5deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
-        }
+        #gacha-animation-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); border-radius: 10px; z-index: 10; flex-direction: column; align-items: center; justify-content: center; }
+        .capsule { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(to bottom, #ff1744 50%, #fff 50%); border: 4px solid #000; }
+        @keyframes shake { 0% { transform: rotate(0deg); } 20% { transform: rotate(-10deg); } 40% { transform: rotate(10deg); } 60% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 100% { transform: rotate(0deg); } }
         .shake-anim { animation: shake 0.5s ease-in-out 3; }
-        
-        @keyframes popup {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1.3); opacity: 1; }
-        }
-        .result-popup { animation: popup 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; font-size: 24px; font-weight: bold; text-align: center; padding: 10px; }
-
-        /* レアリティ別カラー */
+        @keyframes popup { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1.2); opacity: 1; } }
+        .result-popup { animation: popup 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; font-size: 22px; font-weight: bold; }
         .rarity-基本 { border-left: 5px solid #ffffff; color: #fff; }
         .rarity-レア { border-left: 5px solid #00e5ff; color: #00e5ff; }
         .rarity-激レア { border-left: 5px solid #aa00ff; color: #aa00ff; }
         .rarity-超激レア { border-left: 5px solid #ffea00; color: #ffea00; text-shadow: 0 0 5px rgba(255,234,0,0.6); }
-        
         .bg-基本 { background: #444; border-color: #666; }
         .bg-レア { background: #006064; border-color: #00e5ff; }
         .bg-激レア { background: #4a148c; border-color: #aa00ff; }
@@ -79,15 +47,14 @@
 <body>
 
 <div id="game-container">
-    <!-- 共通ヘッダー -->
     <div class="global-hud">
         <div>ステージ: <span id="global-stage">1</span></div>
         <div>所持金: <span id="global-gold" class="gold-color">500</span> G</div>
     </div>
 
-    <!-- 1. ホーム画面 -->
+    <!-- ホーム -->
     <div id="home-page" class="page active">
-        <h1>にゃんこ風大戦<br><span style="font-size:16px; color:#aaa;">〜出撃バグ完全修正版〜</span></h1>
+        <h1>にゃんこ風大戦<br><span style="font-size:16px; color:#aaa;">〜外部読み込みアニメーション対応〜</span></h1>
         <div class="menu-grid">
             <button class="btn btn-menu" style="background:#b71c1c;" onclick="showPage('battle-page')">⚔️ 戦闘開始</button>
             <button class="btn btn-menu" style="background:#1e88e5;" onclick="showPage('upgrade-page')">💪 キャラ育成</button>
@@ -95,28 +62,26 @@
         </div>
     </div>
 
-    <!-- 2. 戦闘画面 -->
+    <!-- バトル -->
     <div id="battle-page" class="page">
         <div class="battle-hud">
             <div>敵城: <span id="e-base-hp">600</span></div>
             <div>自城: <span id="p-base-hp">600</span> / 600</div>
             <div>コスト: <span id="battle-cost">0</span> / 500</div>
         </div>
-        
         <canvas id="gameCanvas" width="750" height="200"></canvas>
-        
         <div class="deck-grid" id="deck-grid"></div>
         <button class="btn btn-back" onclick="exitBattle()">🏳️ ホームへ戻る（撤退）</button>
     </div>
 
-    <!-- 3. 育成画面 -->
+    <!-- 育成 -->
     <div id="upgrade-page" class="page">
-        <h2>キャラクター育成一覧</h2>
+        <h2>キャラクター育成・設定ライブラリ</h2>
         <div class="scroll-list" id="char-list-container"></div>
         <button class="btn btn-back" onclick="showPage('home-page')">↩️ ホームへ戻る</button>
     </div>
 
-    <!-- 4. ガチャ画面 -->
+    <!-- ガチャ -->
     <div id="gacha-page" class="page">
         <h2>レアガチャの館</h2>
         <div class="gacha-box">
@@ -125,7 +90,6 @@
                 <div id="gacha-result-text" class="result-popup"></div>
                 <button class="btn" id="btn-gacha-close" style="display:none; margin-top:20px;" onclick="closeGachaAnimation()">閉じる</button>
             </div>
-
             <b style="font-size:18px; color:#ffea00;">1回：150 G</b>
             <p style="font-size:12px; color:#ccc; margin:10px 0;">基本 50% | レア 35% | 激レア 12% | 超激レア 3%</p>
             <button class="btn" style="background:#4caf50; width:80%; font-size:18px;" id="btn-gacha" onclick="drawGacha()">ガチャを回す！</button>
@@ -136,62 +100,40 @@
     </div>
 </div>
 
+<!-- ここで外部ファイルから追加キャラクターを読み込む -->
+<script src="characters.js"></script>
+
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+// characters.jsが読み込めなかった場合の保険データ
+if (typeof CUSTOM_CHARACTERS === 'undefined') {
+    alert("Error: characters.js が見つからないよ！同じフォルダに配置してね。");
+}
 
 let playerGold = 500;
 let deployCost = 0;
-let maxDeployCost = 500; // 最大コストを500に拡張！
+let maxDeployCost = 500;
 let currentStage = 1;
 let gameActive = false;
 let currentTab = 'home-page';
+let tickCount = 0;
 
-// キャラクターデータベース
-let charDatabase = [];
-const rarities = ['基本', 'レア', '激レア', '超激レア'];
-const prefixes = { '基本':['ネコ','チビ','マメ'], 'レア':['ジュラ','ホッピング','探検家'], '激レア':['コタツ','ハッカー','スイマー'], '超激レア':['破壊神','聖龍','古代兵器'] };
-const suffixes = ['Z', '零式', 'ネオ', '神', '極'];
-const raritySettings = {
-    '基本':     { hpMul: 1.0, atkMul: 1.0, cost: 20,  color: '#ffffff' },
-    'レア':     { hpMul: 1.5, atkMul: 1.4, cost: 50,  color: '#00e5ff' },
-    '激レア':   { hpMul: 2.5, atkMul: 2.2, cost: 90,  color: '#aa00ff' },
-    '超激レア': { hpMul: 6.0, atkMul: 5.5, cost: 150, color: '#ffea00' }
-};
+// 最初の1体だけ最初から所持させる
+if(CUSTOM_CHARACTERS.length > 0 && CUSTOM_CHARACTERS[0].lv === 0) {
+    CUSTOM_CHARACTERS[0].lv = 1;
+}
 
-// 50体のキャラ自動生成
-let idCounter = 0;
-rarities.forEach(rarity => {
-    let count = rarity === '基本'? 15 : rarity === 'レア'? 15 : rarity === '激レア'? 12 : 8;
-    let prefList = prefixes[rarity];
-    for(let i=0; i<count; i++) {
-        let name = `${prefList[i % prefList.length]}${suffixes[Math.floor(Math.random()*suffixes.length)]}`;
-        if(i===0 && rarity==='基本') name = "ネコ基本型";
-        let isRange = Math.random() < 0.3;
-        charDatabase.push({
-            id: idCounter++, name: name, rarity: rarity, lv: (i===0 && rarity==='基本') ? 1 : 0,
-            bHp: Math.floor((30 + Math.random()*20)*raritySettings[rarity].hpMul),
-            bAtk: Math.floor((8 + Math.random()*5)*raritySettings[rarity].atkMul),
-            speed: isRange ? 1.2 : 1.5 + Math.random(), range: isRange ? 130 : 25,
-            cost: raritySettings[rarity].cost, color: raritySettings[rarity].color, size: rarity==='超激レア'? 32 : 20
-        });
-    }
-});
-
-// 拠点設定（敵：左、自分：右）
 let pBase = { x: 700, hp: 600, maxHp: 600 };
 let eBase = { x: 50, hp: 600, maxHp: 600 };
 let pUnits = [], eUnits = [];
 let enemySpawnTimer = 0;
 
-function getHp(c) { return c.bHp + (c.lv - 1) * Math.floor(c.bHp * 0.2); }
-function getAtk(c) { return c.bAtk + (c.lv - 1) * Math.floor(c.bAtk * 0.15); }
+function getHp(c) { return c.bHp + (c.lv - 1) * Math.floor(c.bHp * 0.25); }
+function getAtk(c) { return c.bAtk + (c.lv - 1) * Math.floor(c.bAtk * 0.2); }
 
 function showPage(pageId) {
     currentTab = pageId;
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
-    
     if (pageId === 'battle-page') { initStage(); } else { gameActive = false; }
     if (pageId === 'upgrade-page') buildUpgradeList();
     updateUI();
@@ -202,7 +144,6 @@ function exitBattle() { gameActive = false; showPage('home-page'); }
 function updateUI() {
     document.getElementById('global-gold').innerText = Math.floor(playerGold);
     document.getElementById('global-stage').innerText = currentStage;
-
     if (currentTab === 'battle-page') {
         document.getElementById('battle-cost').innerText = Math.floor(deployCost);
         document.getElementById('p-base-hp').innerText = Math.floor(pBase.hp);
@@ -214,27 +155,27 @@ function updateUI() {
 function buildUpgradeList() {
     const container = document.getElementById('char-list-container');
     container.innerHTML = '';
-    charDatabase.forEach(c => {
-        if(c.lv === 0) return;
+    CUSTOM_CHARACTERS.forEach(c => {
+        if(!c.lv || c.lv === 0) return;
         let cost = c.lv * 40;
         let card = document.createElement('div');
         card.className = `char-card rarity-${c.rarity}`;
         card.innerHTML = `
-            <div>
-                <b>${c.name}</b> <span style="font-size:11px;">[${c.rarity}]</span><br>
-                Lv.${c.lv} | HP:${getHp(c)} | ATK:${getAtk(c)} | 射程:${c.range}
+            <div style="flex: 2;">
+                <b>${c.name}</b> <span style="font-size:10px; border:1px solid; padding:1px 3px; border-radius:3px;">${c.rarity}</span><br>
+                <span style="font-size:12px; font-weight:bold; color:#a2cf6e;">Lv.${c.lv} | HP:${getHp(c)} | ATK:${getAtk(c)} | 射程:${c.range}</span>
+                <div class="char-desc">${c.description}</div>
             </div>
-            <button class="btn" style="padding:8px 16px; font-size:14px;" onclick="upgradeChar(${c.id})">${cost}G 強化</button>
+            <button class="btn" style="padding:8px 12px; font-size:13px; flex: 0 0 90px;" onclick="upgradeChar(${c.id})">${cost}G 強化</button>
         `;
         container.appendChild(card);
     });
 }
 
-// デッキボタン生成（バグ防止のためイベント処理を徹底強化）
 function updateBattleDeck() {
     const grid = document.getElementById('deck-grid');
     grid.innerHTML = '';
-    let unlocked = charDatabase.filter(c => c.lv > 0).sort((a,b) => b.cost - a.cost);
+    let unlocked = CUSTOM_CHARACTERS.filter(c => c.lv > 0).sort((a,b) => b.cost - a.cost);
     let displayCount = Math.min(10, unlocked.length);
 
     for(let i=0; i<10; i++) {
@@ -242,17 +183,12 @@ function updateBattleDeck() {
         if(i < displayCount) {
             let c = unlocked[i];
             slot.className = `deck-slot bg-${c.rarity}`;
-            slot.innerHTML = `<span>${c.name}</span><span style="color:#ffeb3b; font-size:11px; margin-top:2px;">C:${c.cost}</span>`;
+            slot.innerHTML = `<span style="font-size:11px; max-height:28px; overflow:hidden;">${c.name}</span><span style="color:#ffeb3b; font-size:11px; margin-top:2px;">C:${c.cost}</span>`;
             
-            // コストが足りない時はクラスを付与して完全にタップ不能にする
             if(deployCost < c.cost) {
                 slot.classList.add('disabled');
             } else {
-                // タブレットの高速タップ（ontouchstart）とPCクリック（onmousedown）両方に対応
-                const handler = (e) => {
-                    e.preventDefault();
-                    spawnUnit(c.id);
-                };
+                const handler = (e) => { e.preventDefault(); spawnUnit(c.id); };
                 slot.ontouchstart = handler;
                 slot.onmousedown = handler;
             }
@@ -264,7 +200,6 @@ function updateBattleDeck() {
     }
 }
 
-// --- ガチャ ---
 function drawGacha() {
     if (playerGold < 150) return;
     playerGold -= 150;
@@ -272,8 +207,11 @@ function drawGacha() {
 
     let rand = Math.random() * 100;
     let r = rand < 50 ? '基本' : rand < 85 ? 'レア' : rand < 97 ? '激レア' : '超激レア';
-    let candidates = charDatabase.filter(c => c.rarity === r);
+    let candidates = CUSTOM_CHARACTERS.filter(c => c.rarity === r);
+    
+    if(candidates.length === 0) candidates = CUSTOM_CHARACTERS; // フォールバック
     let rolled = candidates[Math.floor(Math.random() * candidates.length)];
+    if(!rolled.lv) rolled.lv = 0;
     let isNew = rolled.lv === 0;
     rolled.lv++;
 
@@ -292,9 +230,9 @@ function drawGacha() {
         capsule.style.display = 'none';
         resultTxt.className = `result-popup rarity-${rolled.rarity}`;
         resultTxt.innerHTML = `
-            <span style="font-size:14px; color:#aaa;">${isNew?'🌟新規獲得!!':'🔄ダブり重複'}</span><br>
+            <span style="font-size:13px; color:#aaa;">${isNew?'🌟新規解放!!':'🔄能力重複向上'}</span><br>
             ${rolled.name}<br>
-            <span style="font-size:16px; color:#fff;">(レア度: ${rolled.rarity} / Lv.${rolled.lv})</span>
+            <span style="font-size:15px; color:#fff;">(分類: ${rolled.rarity} / レベル.${rolled.lv})</span>
         `;
         closeBtn.style.display = 'block';
 
@@ -309,7 +247,7 @@ function closeGachaAnimation() {
 }
 
 function upgradeChar(id) {
-    let c = charDatabase.find(x => x.id === id);
+    let c = CUSTOM_CHARACTERS.find(x => x.id === id);
     let cost = c.lv * 40;
     if(playerGold < cost) return;
     playerGold -= cost;
@@ -318,30 +256,18 @@ function upgradeChar(id) {
     updateUI();
 }
 
-// --- 出撃処理（コストチェックとログを厳密化） ---
 function spawnUnit(id) {
     if (!gameActive) return;
-    let c = charDatabase.find(x => x.id === id);
-    
-    // 厳密なコストチェック（足りなければ即終了）
+    let c = CUSTOM_CHARACTERS.find(x => x.id === id);
     if (!c || deployCost < c.cost) return;
-    
     deployCost -= c.cost;
     
-    // 右側（自陣）から左に向かって出撃（speedをマイナスに）
     pUnits.push({ 
-        x: pBase.x - 20, 
-        hp: getHp(c), 
-        maxHp: getHp(c), 
-        atk: getAtk(c), 
-        speed: -c.speed, // 左へ進む
-        range: c.range, 
-        color: c.color, 
-        size: c.size, 
-        cd: 0 
+        id: c.id, hp: getHp(c), maxHp: getHp(c), atk: getAtk(c), 
+        speed: -c.speed, range: c.range, size: c.size, color: c.color,
+        x: pBase.x - 20, cd: 0, state: 'walk', drawFunc: c.draw
     });
-    
-    updateUI(); // コストの残量を即座に画面に反映
+    updateUI();
 }
 
 function spawnEnemy() {
@@ -349,9 +275,16 @@ function spawnEnemy() {
     let isBoss = Math.random() < 0.15;
     
     eUnits.push({
-        x: eBase.x + 20, hp: Math.floor(40*mul*(isBoss?4:1)), maxHp: Math.floor(40*mul*(isBoss?4:1)),
+        hp: Math.floor(40*mul*(isBoss?4:1)), maxHp: Math.floor(40*mul*(isBoss?4:1)),
         atk: Math.floor(6*mul*(isBoss?2:1)), speed: isBoss ? 0.7 : 1.2, range: isBoss ? 50 : 25,
-        color: isBoss ? '#ff1744' : '#ff8a80', size: isBoss ? 35 : 20, reward: isBoss ? 120 : 30, cd: 0
+        size: isBoss ? 35 : 20, reward: isBoss ? 120 : 30, x: eBase.x + 20, cd: 0,
+        drawFunc: (ctx, x, y, size, tick, state) => {
+            // 敵ユニットの簡易グラフィック
+            ctx.fillStyle = isBoss ? '#ff1744' : '#ff8a80';
+            ctx.fillRect(x - size/2, y - size, size, size);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x - size/4, y - size + 4, 3, 3);
+        }
     });
 }
 
@@ -360,37 +293,38 @@ function initStage() {
     pBase.hp = pBase.maxHp;
     eBase.hp = eBase.maxHp + (currentStage - 1) * 250;
     eBase.maxHp = eBase.hp;
-    deployCost = 0; // 開始時は0からスタート
+    deployCost = 0;
     gameActive = true;
 }
 
 function victory() { gameActive = false; alert(`ステージ ${currentStage} クリア！ 300G獲得！`); playerGold += 300; currentStage++; showPage('home-page'); }
-function gameOver() { gameActive = false; alert("敗北！ホームに戻って強化しよう！"); showPage('home-page'); }
+function gameOver() { gameActive = false; alert("敗北！キャラを育成して再挑戦だ！"); showPage('home-page'); }
 
 function gameLoop() {
+    tickCount++;
     if (gameActive) {
-        // コストの回復（少し早めに設定）
         if (deployCost < maxDeployCost) deployCost += 0.4;
         playerGold += 0.04;
         
         enemySpawnTimer++;
         if (enemySpawnTimer >= Math.max(40, 130 - currentStage * 10)) { spawnEnemy(); enemySpawnTimer = 0; }
 
-        // プレイヤー軍（左に進む）
         pUnits.forEach(p => {
             if(p.cd > 0) p.cd--;
             let target = eUnits.reduce((closest, e) => (e.x < p.x && (closest === null || e.x > closest.x)) ? e : closest, null);
             
             if (target && (p.x - target.x <= p.range)) { 
+                p.state = 'attack';
                 if(p.cd===0){ target.hp -= p.atk; p.cd=45; } 
             } else if (p.x - eBase.x <= p.range) { 
+                p.state = 'attack';
                 if(p.cd===0){ eBase.hp -= p.atk; p.cd=45; if(eBase.hp<=0) victory(); } 
             } else { 
+                p.state = 'walk';
                 if(!pUnits.some(o => o.x < p.x && p.x - o.x < p.size)) p.x += p.speed; 
             }
         });
 
-        // 敵軍（右に進む）
         eUnits.forEach(e => {
             if(e.cd > 0) e.cd--;
             let target = pUnits.reduce((closest, p) => (p.x > e.x && (closest === null || p.x < closest.x)) ? p : closest, null);
@@ -409,11 +343,21 @@ function gameLoop() {
 
         // 描画
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#1b5e20'; ctx.fillRect(0, 150, canvas.width, 50); // 地面
-        ctx.fillStyle = '#b71c1c'; ctx.fillRect(eBase.x - 15, 80, 30, 70); drawHpBar(eBase.x - 15, 70, 30, eBase.hp, eBase.maxHp); // 敵（左）
-        ctx.fillStyle = '#0d47a1'; ctx.fillRect(pBase.x - 15, 80, 30, 70); drawHpBar(pBase.x - 15, 70, 30, pBase.hp, pBase.maxHp); // 自分（右）
-        pUnits.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x - p.size/2, 150 - p.size, p.size, p.size); drawHpBar(p.x - p.size/2, 142 - p.size, p.size, p.hp, p.maxHp); });
-        eUnits.forEach(e => { ctx.fillStyle = e.color; ctx.fillRect(e.x - e.size/2, 150 - e.size, e.size, e.size); drawHpBar(e.x - e.size/2, 142 - e.size, e.size, e.hp, e.maxHp); });
+        ctx.fillStyle = '#283618'; ctx.fillRect(0, 150, canvas.width, 50); // 地面
+        
+        // 拠点
+        ctx.fillStyle = '#b71c1c'; ctx.fillRect(eBase.x - 15, 80, 30, 70); drawHpBar(eBase.x - 15, 70, 30, eBase.hp, eBase.maxHp);
+        ctx.fillStyle = '#0d47a1'; ctx.fillRect(pBase.x - 15, 80, 30, 70); drawHpBar(pBase.x - 15, 70, 30, pBase.hp, pBase.maxHp);
+        
+        // 各種ユニットの描画（外部ファイルのdraw関数を呼び出す）
+        pUnits.forEach(p => { 
+            p.drawFunc(ctx, p.x, 150, p.size, tickCount, p.state); 
+            drawHpBar(p.x - p.size/2, 142 - p.size, p.size, p.hp, p.maxHp); 
+        });
+        eUnits.forEach(e => { 
+            e.drawFunc(ctx, e.x, 150, e.size, tickCount, 'walk'); 
+            drawHpBar(e.x - e.size/2, 142 - e.size, e.size, e.hp, e.maxHp); 
+        });
     }
     updateUI();
     requestAnimationFrame(gameLoop);
